@@ -43,3 +43,6 @@ htmlcov/
 
 # Logs
 *.log
+
+# GitHub Copilot agents directory
+.github/agents/
