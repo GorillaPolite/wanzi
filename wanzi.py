@@ -3,8 +3,6 @@
 Wanzi - A comprehensive Git repository management tool
 """
 
-import os
-import sys
 import json
 import subprocess
 from pathlib import Path
@@ -21,8 +19,11 @@ CONFIG_FILE = Path.home() / '.wanzi_config.json'
 def load_config():
     """Load configuration from file"""
     if CONFIG_FILE.exists():
-        with open(CONFIG_FILE, 'r') as f:
-            return json.load(f)
+        try:
+            with open(CONFIG_FILE, 'r') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            return {}
     return {}
 
 
@@ -129,14 +130,10 @@ def diff():
 
 
 @cli.command()
-@click.option('--all', '-a', is_flag=True, help='Show all tags')
-def tags(all):
+def tags():
     """List tags"""
     click.echo(f"{Fore.CYAN}Tags:{Style.RESET_ALL}")
-    args = ['tag']
-    if all:
-        args.append('-l')
-    output = run_git_command(args)
+    output = run_git_command(['tag'])
     if output.strip():
         click.echo(output)
     else:
@@ -178,7 +175,7 @@ def stats():
     
     # File count
     try:
-        file_count = len(list(Path('.').rglob('*')))
+        file_count = sum(1 for _ in Path('.').rglob('*'))
         click.echo(f"{Fore.GREEN}Total Files:{Style.RESET_ALL} {file_count}")
     except Exception as e:
         click.echo(f"{Fore.RED}Error counting files:{Style.RESET_ALL} {e}")
@@ -194,8 +191,7 @@ def stats():
 
 
 @cli.command()
-@click.option('--remote', '-r', default='origin', help='Remote name')
-def remotes(remote):
+def remotes():
     """Show remote repositories"""
     click.echo(f"{Fore.CYAN}Remote Repositories:{Style.RESET_ALL}")
     output = run_git_command(['remote', '-v'])
